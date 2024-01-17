@@ -40,7 +40,7 @@ function getPlayers(eventId) {
 function getPairings(eventId) {
   const pairingsUrl = `${BCP_BASE_URL}/pairings?eventId=${EVENT_ID}&sortField=round&smallGame=true`
   const pairingsResponse = UrlFetchApp.fetch(pairingsUrl);
-  const pairings = JSON.parse(pairingsResponse.getContentText())
+  const pairings = JSON.parse(pairingsResponse.getContentText());
   return pairings;
 }
 
@@ -51,7 +51,7 @@ function getPairingsForPlayer(player, pairings) {
   // Find pairings for player
   const playerPairings = pairings.filter((pairing) => {
     return (playerId === pairing?.player1?.userId) || (playerId === pairing?.player2?.userId);
-  })
+  });
   playerPairings.sort((a, b) => a?.round - b?.round);
   return playerPairings;
 }
@@ -88,7 +88,7 @@ function fillOutPlayers() {
       player?.numWins ?? 0,
       player?.FFGBattlePointsSoS ?? 0,
       player?.extendedNumWinsSoS ?? 0,
-    ]
+    ];
 
     playerPairings.forEach((pairing) => {
       const player1 = pairing?.player1;
@@ -101,11 +101,11 @@ function fillOutPlayers() {
       } else if (player2?.userId === player?.userId) {
         rowData.push(getNameFromPlayer(player1));
       } else {
-        rowData.push("??? THIS SHOULDNT HAPPEN")
+        rowData.push("??? THIS SHOULDNT HAPPEN");
       }
-    })
+    });
 
-    sheet.getRange(row, 1, 1, rowData.length).setValues([rowData])
+    sheet.getRange(row, 1, 1, rowData.length).setValues([rowData]);
   });
 
 }
