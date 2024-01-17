@@ -1,10 +1,14 @@
-
 const BCP_BASE_URL = "https://lrs9glzzsf.execute-api.us-east-1.amazonaws.com/prod";
+
+// BCP event ID
 const EVENT_ID = "AAaqpOQY1c";
 
+// Spreadsheet headers
 const headers = ['Name', 'Faction', 'Battle Points', 'Wins', 'Battle Points SoS', 'Wins Extended SoS', 'Opponent 1', 'Opponent 2', 'Opponent 3', 'Opponent 4', 'Opponent 5'];
 
 
+// Sort function for player list
+// Current sort: numWins, battlePoints
 function comparePlayers(a, b) {
   const aWins = a?.numWins ?? 0;
   const bWins = b?.numWins ?? 0;
@@ -24,6 +28,7 @@ function comparePlayers(a, b) {
   return 0;
 }
 
+// Get players for eventId
 function getPlayers(eventId) {
   const playersUrl = `${BCP_BASE_URL}/players?eventId=${eventId}&inclEvent=false&inclMetrics=true&inclArmies=true&inclTeams=true&limit=1200&metrics=[%22resultRecord%22,%22record%22,%22numWins%22,%22battlePoints%22,%22WHArmyPoints%22,%22numWinsSoS%22,%22FFGBattlePointsSoS%22,%22mfSwissPoints%22,%22pathToVictory%22,%22mfStrengthOfSchedule%22,%22marginOfVictory%22,%22extendedNumWinsSoS%22,%22extendedFFGBattlePointsSoS%22,%22_id%22]`
   const playersRsponse = UrlFetchApp.fetch(playersUrl);
@@ -31,6 +36,7 @@ function getPlayers(eventId) {
   return players;
 }
 
+// Get the event pairings for eventId
 function getPairings(eventId) {
   const pairingsUrl = `${BCP_BASE_URL}/pairings?eventId=${EVENT_ID}&sortField=round&smallGame=true`
   const pairingsResponse = UrlFetchApp.fetch(pairingsUrl);
@@ -38,6 +44,7 @@ function getPairings(eventId) {
   return pairings;
 }
 
+// Extracts the pairings for a player
 function getPairingsForPlayer(player, pairings) {
   const playerId = player["userId"];
   
@@ -49,11 +56,13 @@ function getPairingsForPlayer(player, pairings) {
   return playerPairings;
 }
 
+// Helper function to get the name from a player
 function getNameFromPlayer(player) {
   return `${player?.firstName ?? ''} ${player?.lastName ?? ''}`;
 }
 
 
+// Main function
 function fillOutPlayers() {
   const players = getPlayers(EVENT_ID);
   const pairings = getPairings(EVENT_ID);
@@ -99,4 +108,4 @@ function fillOutPlayers() {
     sheet.getRange(row, 1, 1, rowData.length).setValues([rowData])
   });
 
-  }
+}
