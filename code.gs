@@ -1,8 +1,5 @@
 const BCP_BASE_URL = "https://lrs9glzzsf.execute-api.us-east-1.amazonaws.com/prod";
 
-// BCP event ID
-const EVENT_ID = "AAaqpOQY1c";
-
 // Spreadsheet headers
 const headers = ['Name', 'Faction', 'Battle Points', 'Wins', 'Battle Points SoS', 'Wins Extended SoS', 'Opponent 1', 'Opponent 2', 'Opponent 3', 'Opponent 4', 'Opponent 5'];
 
@@ -63,9 +60,9 @@ function getNameFromPlayer(player) {
 
 
 // Main function
-function fillOutPlayers() {
-  const players = getPlayers(EVENT_ID);
-  const pairings = getPairings(EVENT_ID);
+function injectPlayersForEvent(eventId) {
+  const players = getPlayers(eventId);
+  const pairings = getPairings(eventId);
 
   players.sort(comparePlayers);
 
