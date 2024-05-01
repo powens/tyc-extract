@@ -1,8 +1,24 @@
-const BCP_BASE_URL = "https://lrs9glzzsf.execute-api.us-east-1.amazonaws.com/prod";
+const BCP_BASE_URL = "https://newprod-api.bestcoastpairings.com/v1";
+const HEADERS = {
+  "client-id": "259e2q22frfasni9dtjb9q3i7a",
+};
+
+const EXAMPLE_EVENT_ID = "L34UKBEBK0";
 
 // Spreadsheet headers
-const headers = ['Name', 'Faction', 'Battle Points', 'Wins', 'Battle Points SoS', 'Wins Extended SoS', 'Opponent 1', 'Opponent 2', 'Opponent 3', 'Opponent 4', 'Opponent 5'];
-
+const headers = [
+  "Name",
+  "Faction",
+  "Battle Points",
+  "Wins",
+  "Battle Points SoS",
+  "Wins Extended SoS",
+  "Opponent 1",
+  "Opponent 2",
+  "Opponent 3",
+  "Opponent 4",
+  "Opponent 5",
+];
 
 // Sort function for player list
 // Current sort: numWins, battlePoints
@@ -27,27 +43,30 @@ function comparePlayers(a, b) {
 
 // Get players for eventId
 function getPlayers(eventId) {
-  const playersUrl = `${BCP_BASE_URL}/players?eventId=${eventId}&inclEvent=false&inclMetrics=true&inclArmies=true&inclTeams=true&limit=1200&metrics=[%22resultRecord%22,%22record%22,%22numWins%22,%22battlePoints%22,%22WHArmyPoints%22,%22numWinsSoS%22,%22FFGBattlePointsSoS%22,%22mfSwissPoints%22,%22pathToVictory%22,%22mfStrengthOfSchedule%22,%22marginOfVictory%22,%22extendedNumWinsSoS%22,%22extendedFFGBattlePointsSoS%22,%22_id%22]`
-  const playersRsponse = UrlFetchApp.fetch(playersUrl);
+  const playersUrl = `${BCP_BASE_URL}/players?limit=100&eventId=${eventId}&expand[]=army&expand[]=subFaction&expand[]=character&expand[]=team&expand[]=use`;
+  const playersRsponse = UrlFetchApp.fetch(playersUrl, { headers: HEADERS });
   const players = JSON.parse(playersRsponse.getContentText());
-  return players;
+  return players["data"];
 }
 
 // Get the event pairings for eventId
 function getPairings(eventId) {
-  const pairingsUrl = `${BCP_BASE_URL}/pairings?eventId=${EVENT_ID}&sortField=round&smallGame=true`
-  const pairingsResponse = UrlFetchApp.fetch(pairingsUrl);
+  const pairingsUrl = `${BCP_BASE_URL}/pairings?eventId=${eventId}&limit=500&pairingType=Pairing&expand%5B%5D=player1&expand%5B%5D=player2&expand%5B%5D=player1Game&expand%5B%5D=player2Game`;
+  const pairingsResponse = UrlFetchApp.fetch(pairingsUrl, { headers: HEADERS });
   const pairings = JSON.parse(pairingsResponse.getContentText());
-  return pairings;
+  return pairings["data"];
 }
 
 // Extracts the pairings for a player
 function getPairingsForPlayer(player, pairings) {
   const playerId = player["userId"];
-  
+
   // Find pairings for player
   const playerPairings = pairings.filter((pairing) => {
-    return (playerId === pairing?.player1?.userId) || (playerId === pairing?.player2?.userId);
+    return (
+      playerId === pairing?.player1?.userId ||
+      playerId === pairing?.player2?.userId
+    );
   });
   playerPairings.sort((a, b) => a?.round - b?.round);
   return playerPairings;
@@ -55,9 +74,8 @@ function getPairingsForPlayer(player, pairings) {
 
 // Helper function to get the name from a player
 function getNameFromPlayer(player) {
-  return `${player?.firstName ?? ''} ${player?.lastName ?? ''}`;
+  return `${player?.firstName ?? ""} ${player?.lastName ?? ""}`;
 }
-
 
 // Main function
 function injectPlayersForEvent(eventId) {
@@ -66,13 +84,11 @@ function injectPlayersForEvent(eventId) {
 
   players.sort(comparePlayers);
 
-
   // Write the sheet
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
   // Write the column headers
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-
 
   players.forEach((player, i) => {
     const ranking = i + 1;
@@ -80,7 +96,7 @@ function injectPlayersForEvent(eventId) {
     const playerPairings = getPairingsForPlayer(player, pairings);
     const rowData = [
       getNameFromPlayer(player),
-      player?.army?.name ?? 'Unknown',
+      player?.army?.name ?? "Unknown",
       player?.battlePoints ?? 0,
       player?.numWins ?? 0,
       player?.FFGBattlePointsSoS ?? 0,
@@ -92,7 +108,7 @@ function injectPlayersForEvent(eventId) {
       const player2 = pairing?.player2;
 
       if (!player1 || !player2) {
-        rowData.push('BYE');
+        rowData.push("BYE");
       } else if (player1?.userId == player?.userId) {
         rowData.push(getNameFromPlayer(player2));
       } else if (player2?.userId === player?.userId) {
@@ -104,5 +120,4 @@ function injectPlayersForEvent(eventId) {
 
     sheet.getRange(row, 1, 1, rowData.length).setValues([rowData]);
   });
-
 }
